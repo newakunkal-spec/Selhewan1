@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sel Hewan | Jelajah Interaktif Struktur Sel</title>
+<meta name="description" content="Website edukasi interaktif tentang struktur dan fungsi organel Sel Hewan — jelajahi setiap organel lewat diagram sel yang hidup.">
+
+<!-- Google Fonts: Poppins (display) & Inter (body/UI) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==========================================================================
+     LAYAR LOADING — animasi "boot scanner" sebelum konten sel dimuat
+     ========================================================================== -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-cell">
+    <svg viewBox="0 0 100 100" class="loading-svg">
+      <circle cx="50" cy="50" r="34" class="loading-ring loading-ring-1"></circle>
+      <circle cx="50" cy="50" r="34" class="loading-ring loading-ring-2"></circle>
+      <circle cx="50" cy="50" r="6" class="loading-core"></circle>
+    </svg>
+  </div>
+  <p class="loading-text">Memindai sel<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
+</div>
+
+<!-- Latar partikel molekul (canvas, digambar lewat script.js) -->
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+
+<!-- Cahaya lembut mengikuti kursor (desktop only) -->
+<div class="mouse-glow" id="mouseGlow" aria-hidden="true"></div>
+
+<!-- Overlay sidebar untuk mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ==========================================================================
+     NAVBAR
+     ========================================================================== -->
+<header class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a href="#beranda" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="14.5" cy="9" r="2.6" fill="currentColor"/><circle cx="9" cy="14" r="1.4" fill="currentColor" opacity=".6"/></svg>
+      </span>
+      <span class="brand-text">Bio<span class="brand-accent">Sel</span></span>
+    </a>
+
+    <div class="navbar-search">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Cari organel… misal: Mitokondria" autocomplete="off" aria-label="Cari organel">
+      <div class="search-results" id="searchResults" role="listbox"></div>
+    </div>
+
+    <div class="navbar-actions">
+      <button class="icon-btn" id="darkModeToggle" aria-label="Ganti mode gelap/terang" title="Mode gelap/terang">
+        <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.6"/><path d="M12 2v2.4M12 19.6V22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2 12h2.4M19.6 12H22M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg>
+        <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ==========================================================================
+     SIDEBAR
+     ========================================================================== -->
+<aside class="sidebar" id="sidebar">
+  <nav class="sidebar-nav">
+    <p class="sidebar-label">Navigasi</p>
+    <a href="#beranda" class="sidebar-link" data-section="beranda">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 0 0 1 1h4.5v-6h3v6H19a1 1 0 0 0 1-1V10"/></svg>
+      <span>Beranda</span>
+    </a>
+    <a href="#sel-interaktif" class="sidebar-link" data-section="sel-interaktif">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="14.3" cy="9.3" r="2"/><circle cx="9.3" cy="14" r="1.1"/></svg>
+      <span>Sel Interaktif</span>
+    </a>
+    <a href="#daftar-organel" class="sidebar-link" data-section="daftar-organel">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+      <span>Daftar Organel</span>
+    </a>
+    <a href="#quiz" class="sidebar-link" data-section="quiz">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2v.5"/><circle cx="12" cy="17.2" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>Quiz</span>
+    </a>
+    <a href="#tentang" class="sidebar-link" data-section="tentang">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/></svg>
+      <span>Tentang Sel Hewan</span>
+    </a>
+    <a href="#referensi" class="sidebar-link" data-section="referensi">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4.5h11a2 2 0 0 1 2 2V21l-7.5-3.4L5 21V4.5Z"/></svg>
+      <span>Referensi</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-progress">
+    <p class="sidebar-label">Progres Belajar</p>
+    <div class="progress-ring-wrap">
+      <svg class="progress-ring" width="56" height="56" viewBox="0 0 56 56">
+        <circle class="progress-ring-bg" cx="28" cy="28" r="24"></circle>
+        <circle class="progress-ring-bar" id="progressRingBar" cx="28" cy="28" r="24"></circle>
+      </svg>
+      <span class="progress-ring-text" id="progressRingText">0%</span>
+    </div>
+    <p class="sidebar-progress-caption"><span id="visitedCount">0</span>/<span id="totalCount">14</span> organel dipelajari</p>
+  </div>
+</aside>
+
+<!-- ==========================================================================
+     KONTEN UTAMA
+     ========================================================================== -->
+<main id="mainContent">
+
+  <!-- ================= HERO / BERANDA ================= -->
+  <section class="hero" id="beranda">
+    <div class="hero-blobs" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+    </div>
+
+    <div class="hero-inner">
+      <p class="hero-eyebrow reveal">Biologi · Kelas 8 · Struktur &amp; Fungsi Sel</p>
+      <h1 class="hero-title reveal">
+        <span class="hero-title-line" data-text="SEL HEWAN">SEL HEWAN</span>
+      </h1>
+      <p class="hero-subtitle reveal">Mengenal Struktur dan Fungsi Organel Sel Hewan</p>
+      <p class="hero-desc reveal">Sentuh, putar, dan telusuri sel hidup secara digital — setiap organel bisa kamu bedah satu per satu, lengkap dengan fungsi, cara kerja, dan fakta menariknya.</p>
+
+      <div class="hero-actions reveal">
+        <button class="btn btn-primary ripple" id="startLearningBtn">
+          <span>Mulai Belajar</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+        </button>
+        <a href="#tentang" class="btn btn-ghost ripple">Apa itu Sel Hewan?</a>
+      </div>
+
+      <div class="hero-stats reveal">
+        <div class="hero-stat"><strong>14</strong><span>Organel</span></div>
+        <div class="hero-stat"><strong>28+</strong><span>Kuis Mini</span></div>
+        <div class="hero-stat"><strong>100%</strong><span>Interaktif</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual" id="heroVisual">
+      <div class="hero-cell-glow" aria-hidden="true"></div>
+      <!-- Diagram sel mini di hero — versi ringan, dekoratif, non-interaktif -->
+      <svg viewBox="0 0 400 400" class="hero-cell-svg" id="heroCellSvg" aria-hidden="true">
+        <defs>
+          <radialGradient id="heroGradCyto" cx="38%" cy="32%" r="75%">
+            <stop offset="0%" stop-color="#d7fbee"/>
+            <stop offset="100%" stop-color="#8fe4c9"/>
+          </radialGradient>
+          <radialGradient id="heroGradNuc" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#c9b8fb"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+          </radialGradient>
+        </defs>
+        <path class="hero-cell-fill" d="M200,40 C286,37 363,93 377,180 C390,267 347,347 260,377 C187,400 93,380 50,307 C10,237 30,127 100,73 C130,52 165,42 200,40 Z" fill="url(#heroGradCyto)"/>
+        <path class="hero-cell-outline" d="M200,40 C286,37 363,93 377,180 C390,267 347,347 260,377 C187,400 93,380 50,307 C10,237 30,127 100,73 C130,52 165,42 200,40 Z" fill="none" stroke="url(#heroGradMembrane)" stroke-width="6"/>
+        <linearGradient id="heroGradMembrane" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#34d399"/>
+        </linearGradient>
+        <circle class="hero-float-part" cx="220" cy="175" r="58" fill="url(#heroGradNuc)"/>
+        <circle class="hero-float-part" cx="240" cy="158" r="17" fill="#5b21b6" opacity=".85"/>
+        <g class="hero-float-part" style="animation-delay:-1.2s">
+          <ellipse cx="120" cy="130" rx="22" ry="12" fill="#fb7185" transform="rotate(-25 120 130)"/>
+        </g>
+        <g class="hero-float-part" style="animation-delay:-2.4s">
+          <ellipse cx="300" cy="230" rx="20" ry="11" fill="#fb7185" transform="rotate(20 300 230)"/>
+        </g>
+        <circle class="hero-float-part" cx="130" cy="260" r="10" fill="#fbbf24" style="animation-delay:-.8s"/>
+        <circle class="hero-float-part" cx="290" cy="120" r="8" fill="#38bdf8" style="animation-delay:-1.8s"/>
+      </svg>
+    </div>
+
+    <button class="scroll-indicator" id="scrollIndicator" aria-label="Gulir ke bawah">
+      <span>Gulir</span>
+      <svg width="14" height="22" viewBox="0 0 14 22"><rect x="1" y="1" width="12" height="20" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle class="scroll-dot" cx="7" cy="6.5" r="2" fill="currentColor"/></svg>
+    </button>
+  </section>
+
+  <!-- ================= SEL INTERAKTIF ================= -->
+  <section class="cell-section" id="sel-interaktif">
+    <div class="section-head reveal">
+      <p class="section-eyebrow">Spesimen Digital</p>
+      <h2 class="section-title">Bedah Sel Hewan Secara Interaktif</h2>
+      <p class="section-desc">Arahkan kursor ke setiap bagian sel untuk menyorotinya, lalu klik untuk membuka panel data lengkap. Di perangkat sentuh, cukup ketuk organelnya.</p>
+    </div>
+
+    <div class="cell-layout">
+      <!-- Panel kiri: daftar cepat organel (scrollspy + filter pencarian) -->
+      <div class="organelle-rail reveal" id="organelleRail">
+        <p class="rail-label">Peta Organel</p>
+        <div class="rail-list" id="railList"><!-- diisi oleh script.js --></div>
+      </div>
+
+      <!-- Panggung sel -->
+      <div class="cell-stage" id="cellStage">
+        <div class="cell-stage-glow" aria-hidden="true"></div>
+        <div class="cell-tooltip" id="cellTooltip"></div>
+        <div class="cell-scanline" id="cellScanline" aria-hidden="true"></div>
+
+        <svg id="cellSvg" class="cell-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram interaktif Sel Hewan">
+          <defs>
+            <radialGradient id="gradCytoplasm" cx="38%" cy="30%" r="78%">
+              <stop offset="0%" stop-color="#e3fbf3"/>
+              <stop offset="100%" stop-color="#a8e8d3"/>
+            </radialGradient>
+            <linearGradient id="gradMembrane" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22d3ee"/>
+              <stop offset="100%" stop-color="#059669"/>
+            </linearGradient>
+            <radialGradient id="gradNucleus" cx="34%" cy="28%" r="78%">
+              <stop offset="0%" stop-color="#ddd0fd"/>
+              <stop offset="100%" stop-color="#8b5cf6"/>
+            </radialGradient>
+            <radialGradient id="gradNucleolus" cx="35%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="100%" stop-color="#5b21b6"/>
+            </radialGradient>
+            <radialGradient id="gradMito" cx="32%" cy="28%" r="80%">
+              <stop offset="0%" stop-color="#fda4af"/>
+              <stop offset="100%" stop-color="#e11d48"/>
+            </radialGradient>
+            <radialGradient id="gradLyso" cx="34%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#fcd34d"/>
+              <stop offset="100%" stop-color="#b45309"/>
+            </radialGradient>
+            <radialGradient id="gradPerox" cx="34%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#fef08a"/>
+              <stop offset="100%" stop-color="#ca8a04"/>
+            </radialGradient>
+            <radialGradient id="gradVac" cx="34%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#bae6fd"/>
+              <stop offset="100%" stop-color="#0284c7"/>
+            </radialGradient>
+            <radialGradient id="gradGolgi" cx="34%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#fdba74"/>
+              <stop offset="100%" stop-color="#c2410c"/>
+            </radialGradient>
+            <filter id="glowFilter" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="7" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- SITOPLASMA (isi + latar klik) -->
+          <g class="organelle" data-id="sitoplasma" tabindex="0" role="button" aria-label="Sitoplasma">
+            <path class="cell-fill" d="M300,50 C432,45 542,132 562,262 C582,392 508,512 378,558 C258,600 122,572 62,460 C15,352 32,184 132,100 C176,63 236,53 300,50 Z" fill="url(#gradCytoplasm)"/>
+          </g>
+
+          <!-- RETIKULUM ENDOPLASMA KASAR -->
+          <g class="organelle" data-id="re-kasar" tabindex="0" role="button" aria-label="Retikulum Endoplasma Kasar">
+            <path d="M215,235 Q160,245 175,280 Q192,315 150,335 Q108,355 135,390 Q158,418 120,440 Q95,455 110,475" fill="none" stroke="#fb7185" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="205" cy="238" r="4.2" fill="#9f1239"/><circle cx="178" cy="258" r="4.2" fill="#9f1239"/>
+            <circle cx="188" cy="288" r="4.2" fill="#9f1239"/><circle cx="155" cy="310" r="4.2" fill="#9f1239"/>
+            <circle cx="163" cy="340" r="4.2" fill="#9f1239"/><circle cx="128" cy="365" r="4.2" fill="#9f1239"/>
+            <circle cx="140" cy="395" r="4.2" fill="#9f1239"/><circle cx="112" cy="425" r="4.2" fill="#9f1239"/>
+          </g>
+
+          <!-- RETIKULUM ENDOPLASMA HALUS -->
+          <g class="organelle" data-id="re-halus" tabindex="0" role="button" aria-label="Retikulum Endoplasma Halus">
+            <path d="M110,475 Q80,485 92,510 Q104,535 75,548 Q55,557 68,575" fill="none" stroke="#fdba74" stroke-width="10" stroke-linecap="round"/>
+          </g>
+
+          <!-- BADAN GOLGI -->
+          <g class="organelle" data-id="badan-golgi" tabindex="0" role="button" aria-label="Badan Golgi">
+            <path d="M418,315 Q460,302 502,316" fill="none" stroke="url(#gradGolgi)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M414,332 Q460,317 506,332" fill="none" stroke="url(#gradGolgi)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M412,349 Q460,333 508,349" fill="none" stroke="url(#gradGolgi)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M414,366 Q460,350 506,366" fill="none" stroke="url(#gradGolgi)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M418,383 Q460,368 502,383" fill="none" stroke="url(#gradGolgi)" stroke-width="8" stroke-linecap="round"/>
+          </g>
+
+          <!-- MITOKONDRIA (3) -->
+          <g class="organelle" data-id="mitokondria" tabindex="0" role="button" aria-label="Mitokondria">
+            <g transform="translate(150,160) rotate(-18)">
+              <rect x="-32" y="-17" width="64" height="34" rx="17" fill="url(#gradMito)" stroke="#881337" stroke-width="2"/>
+              <path d="M-20,-8 Q-13,-15 -6,-8 Q1,-1 8,-8 Q15,-15 20,-8" fill="none" stroke="#881337" stroke-width="2"/>
+              <path d="M-20,4 Q-13,-3 -6,4 Q1,11 8,4 Q15,-3 20,4" fill="none" stroke="#881337" stroke-width="2"/>
+            </g>
+            <g transform="translate(482,150) rotate(24)">
+              <rect x="-30" y="-16" width="60" height="32" rx="16" fill="url(#gradMito)" stroke="#881337" stroke-width="2"/>
+              <path d="M-18,-7 Q-11,-13 -4,-7 Q3,-1 10,-7 Q17,-13 22,-7" fill="none" stroke="#881337" stroke-width="2"/>
+            </g>
+            <g transform="translate(335,505) rotate(-6)">
+              <rect x="-33" y="-17" width="66" height="34" rx="17" fill="url(#gradMito)" stroke="#881337" stroke-width="2"/>
+              <path d="M-20,-8 Q-13,-15 -6,-8 Q1,-1 8,-8 Q15,-15 20,-8" fill="none" stroke="#881337" stroke-width="2"/>
+              <path d="M-20,4 Q-13,-3 -6,4 Q1,11 8,4 Q15,-3 20,4" fill="none" stroke="#881337" stroke-width="2"/>
+            </g>
+          </g>
+
+          <!-- LISOSOM (3) -->
+          <g class="organelle" data-id="lisosom" tabindex="0" role="button" aria-label="Lisosom">
+            <circle cx="512" cy="262" r="15" fill="url(#gradLyso)" stroke="#78350f" stroke-width="1.6"/>
+            <circle cx="232" cy="482" r="14" fill="url(#gradLyso)" stroke="#78350f" stroke-width="1.6"/>
+            <circle cx="498" cy="442" r="13" fill="url(#gradLyso)" stroke="#78350f" stroke-width="1.6"/>
+          </g>
+
+          <!-- PEROKSISOM (2) -->
+          <g class="organelle" data-id="peroksisom" tabindex="0" role="button" aria-label="Peroksisom">
+            <circle cx="538" cy="352" r="12" fill="url(#gradPerox)" stroke="#713f12" stroke-width="1.4"/>
+            <circle cx="298" cy="542" r="12" fill="url(#gradPerox)" stroke="#713f12" stroke-width="1.4"/>
+          </g>
+
+          <!-- VAKUOLA KECIL (2) -->
+          <g class="organelle" data-id="vakuola-kecil" tabindex="0" role="button" aria-label="Vakuola kecil">
+            <circle cx="203" cy="142" r="17" fill="url(#gradVac)" opacity=".75" stroke="#075985" stroke-width="1.6"/>
+            <circle cx="468" cy="472" r="15" fill="url(#gradVac)" opacity=".75" stroke="#075985" stroke-width="1.6"/>
+          </g>
+
+          <!-- VESIKEL (4) -->
+          <g class="organelle" data-id="vesikel" tabindex="0" role="button" aria-label="Vesikel">
+            <circle cx="422" cy="402" r="7.5" fill="#fde68a" stroke="#b45309" stroke-width="1.4"/>
+            <circle cx="500" cy="382" r="7.5" fill="#fde68a" stroke="#b45309" stroke-width="1.4"/>
+            <circle cx="440" cy="292" r="7.5" fill="#fde68a" stroke="#b45309" stroke-width="1.4"/>
+            <circle cx="382" cy="458" r="7.5" fill="#fde68a" stroke="#b45309" stroke-width="1.4"/>
+          </g>
+
+          <!-- RIBOSOM BEBAS (10) -->
+          <g class="organelle" data-id="ribosom" tabindex="0" role="button" aria-label="Ribosom">
+            <circle cx="258" cy="148" r="3.6" fill="#7c2d92"/><circle cx="288" cy="118" r="3.6" fill="#7c2d92"/>
+            <circle cx="197" cy="196" r="3.6" fill="#7c2d92"/><circle cx="412" cy="232" r="3.6" fill="#7c2d92"/>
+            <circle cx="442" cy="182" r="3.6" fill="#7c2d92"/><circle cx="362" cy="462" r="3.6" fill="#7c2d92"/>
+            <circle cx="412" cy="512" r="3.6" fill="#7c2d92"/><circle cx="162" cy="482" r="3.6" fill="#7c2d92"/>
+            <circle cx="303" cy="183" r="3.6" fill="#7c2d92"/><circle cx="222" cy="302" r="3.6" fill="#7c2d92"/>
+          </g>
+
+          <!-- SENTRIOL -->
+          <g class="organelle" data-id="sentriol" tabindex="0" role="button" aria-label="Sentriol">
+            <g transform="translate(235,108)">
+              <rect x="-19" y="-4.5" width="38" height="9" rx="4.5" fill="#475569" stroke="#1e293b" stroke-width="1"/>
+              <rect x="9" y="-19" width="9" height="38" rx="4.5" fill="#64748b" stroke="#1e293b" stroke-width="1"/>
+            </g>
+          </g>
+
+          <!-- NUKLEUS + NUKLEOLUS -->
+          <g class="organelle" data-id="nukleus" tabindex="0" role="button" aria-label="Nukleus">
+            <circle cx="350" cy="230" r="88" fill="url(#gradNucleus)" stroke="#5b21b6" stroke-width="3"/>
+            <circle cx="350" cy="230" r="72" fill="none" stroke="#7c3aed" stroke-width="1.2" opacity=".45" stroke-dasharray="3 5"/>
+            <circle cx="350" cy="142" r="3" fill="#5b21b6"/><circle cx="405" cy="165" r="3" fill="#5b21b6"/>
+            <circle cx="422" cy="230" r="3" fill="#5b21b6"/><circle cx="405" cy="295" r="3" fill="#5b21b6"/>
+            <circle cx="350" cy="318" r="3" fill="#5b21b6"/><circle cx="295" cy="295" r="3" fill="#5b21b6"/>
+            <circle cx="278" cy="230" r="3" fill="#5b21b6"/><circle cx="295" cy="165" r="3" fill="#5b21b6"/>
+          </g>
+          <g class="organelle" data-id="nukleolus" tabindex="0" role="button" aria-label="Nukleolus">
+            <circle cx="376" cy="203" r="24" fill="url(#gradNucleolus)" stroke="#4c1d95" stroke-width="1.6"/>
+          </g>
+
+          <!-- MEMBRAN SEL (outline, hotspot hanya pada garis) -->
+          <g class="organelle" data-id="membran-sel" tabindex="0" role="button" aria-label="Membran Sel">
+            <path class="membrane-outline" d="M300,50 C432,45 542,132 562,262 C582,392 508,512 378,558 C258,600 122,572 62,460 C15,352 32,184 132,100 C176,63 236,53 300,50 Z" fill="none" stroke="url(#gradMembrane)" stroke-width="9" stroke-linejoin="round" pointer-events="stroke"/>
+          </g>
+        </svg>
+
+        <div class="cell-stage-caption">
+          <span class="caption-dot"></span> Klik bagian sel yang bercahaya untuk membuka data organel
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress bar horizontal di bawah panggung sel -->
+    <div class="learn-progress reveal">
+      <div class="learn-progress-top">
+        <span>Progres Eksplorasi</span>
+        <span id="learnProgressPercent">0%</span>
+      </div>
+      <div class="learn-progress-track">
+        <div class="learn-progress-fill" id="learnProgressFill"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DAFTAR ORGANEL ================= -->
+  <section class="organelle-list-section" id="daftar-organel">
+    <div class="section-head reveal">
+      <p class="section-eyebrow">Katalog</p>
+      <h2 class="section-title">Daftar Organel Sel Hewan</h2>
+      <p class="section-desc">Semua organel yang menyusun sel hewan. Klik kartu mana pun untuk membuka materi lengkapnya — cocok untuk mengulang bagian yang belum kamu kuasai.</p>
+    </div>
+    <div class="organelle-grid" id="organelleGrid"><!-- diisi oleh script.js --></div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="quiz-section" id="quiz">
+    <div class="section-head reveal">
+      <p class="section-eyebrow">Uji Pemahaman</p>
+      <h2 class="section-title">Quiz Sel Hewan</h2>
+      <p class="section-desc">Jawab pertanyaan dari seluruh organel yang sudah kamu pelajari. Skor akhir akan menunjukkan seberapa siap kamu menghadapi ulangan.</p>
+    </div>
+
+    <div class="quiz-card reveal" id="quizCard">
+      <!-- STATE 1: layar mulai -->
+      <div class="quiz-state" id="quizStart">
+        <div class="quiz-start-icon">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 2v.5"/><circle cx="12" cy="17.2" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="10"/></svg>
+        </div>
+        <h3>Siap menguji pemahamanmu?</h3>
+        <p>14 soal pilihan ganda, satu dari setiap organel. Jawaban benar akan menambah skor dan progres belajarmu.</p>
+        <button class="btn btn-primary ripple" id="quizStartBtn">Mulai Quiz</button>
+      </div>
+
+      <!-- STATE 2: pertanyaan -->
+      <div class="quiz-state quiz-state-hidden" id="quizPlay">
+        <div class="quiz-progress-row">
+          <span id="quizQNum">Soal 1/14</span>
+          <div class="quiz-dots" id="quizDots"></div>
+          <span id="quizScoreLive">Skor: 0</span>
+        </div>
+        <p class="quiz-question" id="quizQuestion">—</p>
+        <div class="quiz-options" id="quizOptions"><!-- diisi oleh script.js --></div>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+        <button class="btn btn-primary ripple quiz-next-btn" id="quizNextBtn" disabled>Lanjut</button>
+      </div>
+
+      <!-- STATE 3: hasil -->
+      <div class="quiz-state quiz-state-hidden" id="quizResult">
+        <div class="quiz-result-ring">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" class="quiz-ring-bg"></circle>
+            <circle cx="60" cy="60" r="52" class="quiz-ring-bar" id="quizResultRing"></circle>
+          </svg>
+          <div class="quiz-result-score" id="quizResultScore">0/14</div>
+        </div>
+        <h3 id="quizResultTitle">Kerja bagus!</h3>
+        <p id="quizResultMsg">Terus jelajahi organel yang belum kamu kuasai.</p>
+        <button class="btn btn-primary ripple" id="quizRetryBtn">Ulangi Quiz</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TENTANG SEL HEWAN ================= -->
+  <section class="about-section" id="tentang">
+    <div class="section-head reveal">
+      <p class="section-eyebrow">Pengetahuan Dasar</p>
+      <h2 class="section-title">Tentang Sel Hewan</h2>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>Sel hewan adalah unit terkecil penyusun tubuh makhluk hidup dari kelompok hewan (termasuk manusia) yang bersifat <strong>eukariotik</strong>, artinya memiliki inti sel (nukleus) yang dibungkus membran dan organel-organel bermembran lain di dalamnya. Satu tubuh hewan tersusun dari triliunan sel yang saling bekerja sama membentuk jaringan, organ, hingga sistem organ.</p>
+        <p>Berbeda dari sel tumbuhan, sel hewan tidak memiliki dinding sel, kloroplas, maupun vakuola besar tunggal. Karena tidak memiliki dinding sel yang kaku, bentuk sel hewan cenderung lebih fleksibel dan tidak beraturan (tidak selalu kotak seperti sel tumbuhan), sehingga memungkinkan sel-sel tertentu seperti sel darah putih untuk bergerak dan berubah bentuk.</p>
+        <p>Meskipun ukurannya sangat kecil dan hanya dapat dilihat dengan mikroskop, di dalam satu sel hewan berlangsung ribuan proses kimia setiap detik — mulai dari menghasilkan energi, membuat protein, hingga membuang zat sisa. Semua proses itu dijalankan oleh organel-organel yang telah kamu pelajari di bagian sel interaktif.</p>
+      </div>
+
+      <div class="about-compare reveal">
+        <p class="compare-title">Sel Hewan vs Sel Tumbuhan (ringkas)</p>
+        <table class="compare-table">
+          <thead><tr><th>Ciri</th><th>Sel Hewan</th><th>Sel Tumbuhan</th></tr></thead>
+          <tbody>
+            <tr><td>Dinding sel</td><td>Tidak ada</td><td>Ada (selulosa)</td></tr>
+            <tr><td>Bentuk</td><td>Tidak beraturan</td><td>Cenderung kotak/tetap</td></tr>
+            <tr><td>Vakuola</td><td>Kecil &amp; banyak</td><td>Besar &amp; tunggal</td></tr>
+            <tr><td>Kloroplas</td><td>Tidak ada</td><td>Ada</td></tr>
+            <tr><td>Sentriol</td><td>Ada</td><td>Umumnya tidak ada</td></tr>
+          </tbody>
+        </table>
+        <p class="compare-note">Fokus website ini adalah Sel Hewan — tabel di atas hanya pembanding singkat.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REFERENSI ================= -->
+  <section class="references-section" id="referensi">
+    <div class="section-head reveal">
+      <p class="section-eyebrow">Sumber Belajar</p>
+      <h2 class="section-title">Referensi</h2>
+      <p class="section-desc">Materi pada website ini disusun berdasarkan sumber-sumber biologi umum yang kredibel, cocok untuk pengayaan lebih lanjut.</p>
+    </div>
+    <div class="reference-grid reveal" id="referenceGrid"><!-- diisi oleh script.js --></div>
+  </section>
+
+</main>
+
+<!-- ==========================================================================
+     FOOTER
+     ========================================================================== -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="14.5" cy="9" r="2.6" fill="currentColor"/></svg>
+      </span>
+      <span class="brand-text">Bio<span class="brand-accent">Sel</span></span>
+    </div>
+    <p class="footer-desc">Website edukasi interaktif Sel Hewan — dibuat untuk tugas Biologi Kelas 8 sebagai media belajar mandiri yang menyenangkan.</p>
+    <nav class="footer-links">
+      <a href="#beranda">Beranda</a>
+      <a href="#sel-interaktif">Sel Interaktif</a>
+      <a href="#daftar-organel">Daftar Organel</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#referensi">Referensi</a>
+    </nav>
+    <p class="footer-copy">Dibuat dengan rasa ingin tahu terhadap biologi sel · Materi untuk kebutuhan edukasi.</p>
+  </div>
+</footer>
+
+<!-- ==========================================================================
+     PANEL DETAIL ORGANEL (slide-in)
+     ========================================================================== -->
+<div class="panel-overlay" id="panelOverlay"></div>
+<aside class="detail-panel" id="detailPanel" aria-hidden="true">
+  <div class="detail-panel-scroll">
+    <header class="detail-panel-header">
+      <div class="detail-tag" id="detailTag">ORGANEL</div>
+      <button class="panel-close-btn" id="panelCloseBtn" aria-label="Tutup panel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      </button>
+      <div class="detail-icon-wrap" id="detailIconWrap"><!-- ilustrasi svg --></div>
+      <h2 class="detail-title" id="detailTitle">Nama Organel</h2>
+      <p class="detail-subtitle" id="detailSubtitle">Nama lain</p>
+    </header>
+
+    <nav class="detail-tabs" id="detailTabs">
+      <button class="detail-tab active" data-tab="pengertian">Pengertian</button>
+      <button class="detail-tab" data-tab="fungsi">Fungsi</button>
+      <button class="detail-tab" data-tab="cara-kerja">Cara Kerja</button>
+      <button class="detail-tab" data-tab="fakta">Fakta</button>
+      <button class="detail-tab" data-tab="analogi">Analogi</button>
+      <button class="detail-tab" data-tab="ringkasan">Ringkasan</button>
+      <button class="detail-tab" data-tab="quiz">Quiz Mini</button>
+    </nav>
+
+    <div class="detail-body" id="detailBody">
+      <div class="detail-pane active" data-pane="pengertian" id="panePengertian"></div>
+      <div class="detail-pane" data-pane="fungsi" id="paneFungsi"></div>
+      <div class="detail-pane" data-pane="cara-kerja" id="paneCaraKerja"></div>
+      <div class="detail-pane" data-pane="fakta" id="paneFakta"></div>
+      <div class="detail-pane" data-pane="analogi" id="paneAnalogi"></div>
+      <div class="detail-pane" data-pane="ringkasan" id="paneRingkasan"></div>
+      <div class="detail-pane" data-pane="quiz" id="paneQuiz"></div>
+    </div>
+
+    <footer class="detail-panel-footer">
+      <button class="btn btn-outline ripple" id="detailLearnMoreBtn">Pelajari Lebih Lanjut</button>
+      <button class="btn btn-primary ripple" id="detailNextBtn">
+        <span>Selanjutnya</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </footer>
+  </div>
+</aside>
+
+<!-- Toast notifikasi -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
