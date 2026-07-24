@@ -348,7 +348,7 @@ body.dark .icon-moon { opacity: 1; transform: rotate(0) scale(1); }
   background: var(--c-surface);
   backdrop-filter: blur(18px) saturate(160%);
   border-right: 1px solid var(--c-border);
-  overflow-y: auto;
+  overflow-y: auto; overflow-x: hidden;
   transition: transform var(--transition-med), background-color var(--transition-med);
 }
 .sidebar-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c-text-faint); padding: 0 12px 10px; }
@@ -896,7 +896,6 @@ body.dark .footer-links a:hover { color: var(--c-green); }
 }
 
 @media (max-width: 1024px) {
-  :root { --sidebar-w: 0px; }
   .navbar-inner { margin-left: 0; padding: 0 16px; }
   #mainContent { margin-left: 0; }
   .hamburger-btn { display: flex; }
